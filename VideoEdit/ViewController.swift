@@ -10,6 +10,9 @@ import PhotosUI
 
 class ViewController: UIViewController {
     
+    static let videoUnitSec: Double = 30.0
+    static let videoUnitWidth: Double = 100.0
+    
     private let addVideoButton: UIButton = {
         let button = UIButton()
         button.setTitle("Add Video", for: .normal)
@@ -23,9 +26,9 @@ class ViewController: UIViewController {
     
    private var videoCollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
-        layout.minimumInteritemSpacing = 3
+        layout.minimumInteritemSpacing = 0
         layout.minimumLineSpacing = 10
-        layout.sectionInset = UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10)
+        layout.sectionInset = UIEdgeInsets(top: 10, left: 0, bottom: 10, right: 10)
         layout.scrollDirection = .horizontal
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.backgroundColor = .blue
@@ -50,6 +53,7 @@ class ViewController: UIViewController {
     }()
     
     var videoAssets: [AVAsset] = []
+    var videoThumbnails: [UIImage] = [] // 썸네일 이미지 배열
     var mergedVideoAsset: AVAsset?  // 결합된 비디오를 기반으로 생성된 AVAsset
     var mergedVideoURL: URL?
     var totalDuration: CMTime? // 비디오의 총 길이 저장
@@ -58,10 +62,10 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         configureVideoCollectionView()
         setUpUI()
-        addVideoButton.addTarget(self, action: #selector(test), for: .touchUpInside)
+        addVideoButton.addTarget(self, action: #selector(addVideosTapped), for: .touchUpInside)
     }
     
-    @objc func test(_ sender: UIButton) {
+    @objc func addVideosTapped(_ sender: UIButton) {
         var config =  PHPickerConfiguration(photoLibrary: PHPhotoLibrary.shared())
         config.selectionLimit = 0 // 제한 없음
         config.filter = .any(of: [.videos])
@@ -79,125 +83,37 @@ class ViewController: UIViewController {
         videoCollectionView.dropDelegate = self
         videoCollectionView.register(VideoCell.self, forCellWithReuseIdentifier: "VideoCell")
     }
-    
-    // 비디오 결합 및 썸네일 생성 함수
-    func mergeVideosAndDisplayThumbnail() {
-        guard !videoAssets.isEmpty else { return }
 
-        // 비디오를 결합하기 위한 AVMutableComposition 생성
-        let composition = AVMutableComposition()
-
-        // 현재 시간 추적을 위한 변수
-        var currentTime = CMTime.zero
-
-        // 비디오 결합
+    private func generateThumbnails() {
         for asset in videoAssets {
-            if let videoTrack = asset.tracks(withMediaType: .video).first {
-                let timeRange = CMTimeRange(start: .zero, duration: asset.duration)
-
-                // 비디오 트랙을 추가
-                let compositionVideoTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid)
-                try? compositionVideoTrack?.insertTimeRange(timeRange, of: videoTrack, at: currentTime)
-
-                // 비디오의 오디오 트랙 추가 (있는 경우)
-                if let audioTrack = asset.tracks(withMediaType: .audio).first {
-                    let compositionAudioTrack = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid)
-                    try? compositionAudioTrack?.insertTimeRange(timeRange, of: audioTrack, at: currentTime)
-                }
-
-                // 다음 비디오가 이어질 시간 업데이트
-                currentTime = CMTimeAdd(currentTime, asset.duration)
-            }
-        }
-
-        // 결합된 비디오를 임시 디렉토리에 저장할 URL 설정
-        let exportURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("mergedVideo.mp4")
-        
-        // 기존 파일 삭제 (동일한 경로에 파일이 이미 존재할 경우)
-        if FileManager.default.fileExists(atPath: exportURL.path) {
-            try? FileManager.default.removeItem(at: exportURL)
-        }
-
-        let exporter = AVAssetExportSession(asset: composition, presetName: AVAssetExportPresetHighestQuality)
-        exporter?.outputURL = exportURL
-        exporter?.outputFileType = .mp4
-        exporter?.shouldOptimizeForNetworkUse = true
-
-        exporter?.exportAsynchronously {
-            if exporter?.status == .completed {
-                DispatchQueue.main.async {
-                    // 결합된 비디오 URL 저장
-                    self.mergedVideoURL = exportURL
-                    
-                    if let mergedVideoURL = self.mergedVideoURL {
-                        let mergedVideo = AVAsset(url: mergedVideoURL)
-                        self.mergedVideoAsset = mergedVideo
-                        self.totalDuration = mergedVideo.duration
-                    }
-                    
-//                    // 결합된 비디오의 썸네일 생성
-                    self.generateThumbnail(from: exportURL)
-                }
-            } else {
-                DispatchQueue.main.async {
-                    if let error = exporter?.error {
-                        print("비디오 결합 실패: \(error.localizedDescription)")
-                    }
-                }
-            }
-        }
-    }
-
-    // 결합된 비디오의 썸네일 생성
-    func generateThumbnail(from url: URL) {
-        let asset = AVAsset(url: url)
-        let imageGenerator = AVAssetImageGenerator(asset: asset)
-        imageGenerator.appliesPreferredTrackTransform = true
-        let time = CMTime(seconds: 1.0, preferredTimescale: 600) // 첫 번째 프레임에서 썸네일 생성
-        
-        do {
-            let cgImage = try imageGenerator.copyCGImage(at: time, actualTime: nil)
-            let uiImage = UIImage(cgImage: cgImage)
+            let imageGenerator = AVAssetImageGenerator(asset: asset)
+            imageGenerator.appliesPreferredTrackTransform = true
             
-            // 상단의 UIImageView에 썸네일 표시
-            self.thumbnailImageView.image = uiImage
-        } catch {
-            print("썸네일 생성 실패: \(error.localizedDescription)")
+            let durationInSeconds = CMTimeGetSeconds(asset.duration)
+            // 비디오의 길이에 따라 1초마다 썸네일 생성
+            for second in 0..<Int(durationInSeconds) {
+                let thumbnailTime = CMTime(seconds: Double(second), preferredTimescale: 600)
+                do {
+                    let cgImage = try imageGenerator.copyCGImage(at: thumbnailTime, actualTime: nil)
+                    let uiImage = UIImage(cgImage: cgImage)
+                    videoThumbnails.append(uiImage)
+                } catch {
+                    print("썸네일 생성 실패: \(error.localizedDescription)")
+                }
+            }
         }
     }
-    
+
     // 스크롤된 시점에 맞춰 해당 썸네일을 표시
     func updateThumbnailAtScrollPosition(scrollOffset: CGFloat) {
         guard let totalDuration = totalDuration else { return }
         
-        // 컬렉션 뷰의 스크롤 범위와 비디오 길이를 매핑
-        let totalScrollWidth = videoCollectionView.contentSize.width - videoCollectionView.bounds.width
-        
-        // 현재 스크롤 위치에 따라 전체 시간 비율 계산
-        let scrollRatio = scrollOffset / totalScrollWidth
-        let currentTimeInSeconds = CMTimeGetSeconds(totalDuration) * scrollRatio
-        
-        // 현재 시간을 CMTime으로 변환
-        let time = CMTime(seconds: currentTimeInSeconds, preferredTimescale: 600)
-        
-        // 썸네일 생성
-        if let mergedVideoURL = mergedVideoURL { // mergedVideoURL은 비디오의 URL
-            let asset = AVAsset(url: mergedVideoURL)
-            let imageGenerator = AVAssetImageGenerator(asset: asset)
-            imageGenerator.appliesPreferredTrackTransform = true
-            
-            // 썸네일 생성 비동기
-            imageGenerator.generateCGImagesAsynchronously(forTimes: [NSValue(time: time)]) { _, image, _, result, error in
-                if let error = error {
-                    print("썸네일 생성 실패: \(error.localizedDescription)")
-                    return
-                }
-                if let image = image {
-                    let uiImage = UIImage(cgImage: image)
-                    DispatchQueue.main.async {
-                        self.thumbnailImageView.image = uiImage // UI 업데이트는 메인 스레드에서
-                    }
-                }
+        // 현재 시간에 해당하는 썸네일 인덱스 계산(역산)
+        let index = Int(scrollOffset / ViewController.videoUnitWidth * ViewController.videoUnitSec)
+
+        if let uiImage = videoThumbnails[safe: index]  {
+            DispatchQueue.main.async {
+                self.thumbnailImageView.image = uiImage
             }
         }
     }
@@ -238,10 +154,19 @@ extension ViewController: PHPickerViewControllerDelegate {
         
         dispatchGroup.notify(queue: .main) {
             // 모든 비디오가 로드된 후 컬렉션 뷰 갱신 및 로딩 인디케이터 중지
-            self.mergeVideosAndDisplayThumbnail()
+            self.generateThumbnails()
+            self.totalDuration = self.calculateTotalDuration(videoAssets: self.videoAssets)
             self.loadingIndicator.stopAnimating()
             self.videoCollectionView.reloadData()
         }
+    }
+    
+    func calculateTotalDuration(videoAssets: [AVAsset]) -> CMTime? {
+        var totalDuration = CMTime.zero
+        for asset in videoAssets {
+            totalDuration = CMTimeAdd(totalDuration, asset.duration)
+        }
+        return totalDuration
     }
 }
 
@@ -253,12 +178,10 @@ extension ViewController: UICollectionViewDelegateFlowLayout {
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let unitSec: Double = 30.0
-        let unitWidth: Double = 100.0
         let videoAsset = videoAssets[indexPath.item]
         let duration = getVideoDuration(asset: videoAsset)
-        let ratio = duration / unitSec
-        return CGSize(width: ratio * unitWidth, height: 100)
+        let ratio = duration / ViewController.videoUnitSec
+        return CGSize(width: ratio * ViewController.videoUnitWidth, height: 100)
     }
     
 }
