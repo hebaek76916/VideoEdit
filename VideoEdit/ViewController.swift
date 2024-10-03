@@ -11,8 +11,8 @@ import PhotosUI
 class ViewController: UIViewController {
     static let videoUnitSec: Double = 30.0
     static let videoUnitWidth: Double = 100.0
-
     static let videoCollectionViewInsetvideoCollectionViewInset: Double = 100.0
+    static let emptyCellWidth: Double = 1000.0
     
     private let addVideoButton: UIButton = {
         let button = UIButton()
@@ -40,21 +40,21 @@ class ViewController: UIViewController {
         let layout = UICollectionViewFlowLayout()
         layout.minimumInteritemSpacing = 0
         layout.minimumLineSpacing = 10
-        layout.sectionInset = UIEdgeInsets(top: 10, left: 0, bottom: 10, right: 10)
+        layout.sectionInset = UIEdgeInsets(top: 10, left: 0, bottom: 10, right: 0)
         layout.scrollDirection = .horizontal
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.backgroundColor = .blue
         collectionView.isScrollEnabled = true
-        collectionView.showsHorizontalScrollIndicator = true
+        collectionView.showsHorizontalScrollIndicator = false
         collectionView.alwaysBounceHorizontal = true
         collectionView.dragInteractionEnabled = true
-       collectionView.contentInset = .init(top: 0, left: ViewController.videoCollectionViewInsetvideoCollectionViewInset, bottom: 0, right: 0)
+        collectionView.contentInset = .init(top: 0, left: ViewController.videoCollectionViewInsetvideoCollectionViewInset, bottom: 0, right: 0)
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         return collectionView
     }()
     
-    private var thumbnailImageView: UIImageView = {
-        let imageView = UIImageView()
+    private var thumbnailImageView: ThumbnailView = {
+        let imageView = ThumbnailView()
         imageView.backgroundColor = .lightGray
         imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
@@ -70,6 +70,22 @@ class ViewController: UIViewController {
     var videoThumbnails: [UIImage] = [] // 썸네일 이미지 배열
     var totalDuration: CMTime? // 비디오의 총 길이 저장
     private let additionalCells = 1 // 추가 여유 공간을 위한 빈 셀
+    var contentWidth: CGFloat {
+        return getRemainingWidthExcludingCell(at: IndexPath(item: videoAssets.count, section: 0))
+    }
+    
+    func getRemainingWidthExcludingCell(at indexPath: IndexPath) -> CGFloat {
+        // 1. 전체 콘텐츠 사이즈 구하기
+        let totalContentWidth = videoCollectionView.contentSize.width
+
+        // 2. 특정 셀의 크기 구하기 (UICollectionViewDelegateFlowLayout의 메서드로부터 사이즈를 가져옴)
+        let cellWidth = collectionView(videoCollectionView, layout: videoCollectionView.collectionViewLayout, sizeForItemAt: indexPath).width
+
+        // 3. 특정 셀의 width를 제외한 나머지 너비 계산
+        let remainingWidth = totalContentWidth - cellWidth
+
+        return remainingWidth
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -77,15 +93,6 @@ class ViewController: UIViewController {
         setUpUI()
         addVideoButton.addTarget(self, action: #selector(addVideosTapped), for: .touchUpInside)
         removeAllButton.addTarget(self, action: #selector(removeAllTapped), for: .touchUpInside)
-    }
-    
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-
-        // 컬렉션 뷰의 contentSize에 추가적인 스크롤 영역을 설정 (300포인트 확장)
-        let additionalScrollSpace: CGFloat = 300
-        let currentContentWidth = videoCollectionView.contentSize.width
-        videoCollectionView.contentSize = CGSize(width: currentContentWidth + additionalScrollSpace, height: videoCollectionView.contentSize.height)
     }
     
     private func generateThumbnails() {
@@ -110,23 +117,28 @@ class ViewController: UIViewController {
         }
         if let first = videoThumbnails.first {
             DispatchQueue.main.async {
-                self.thumbnailImageView.image = first
+                self.thumbnailImageView.setImage(image: first)
             }
         }
     }
 
     // 스크롤된 시점에 맞춰 해당 썸네일을 표시
     func updateThumbnailAtScrollPosition(scrollOffset: CGFloat) {
-        guard let totalDuration = totalDuration else { return }
+        guard
+            scrollOffset >= 0,
+            let totalDuration
+        else { return }
         
         // 현재 시간에 해당하는 썸네일 인덱스 계산(역산)
         let index = Int(scrollOffset / ViewController.videoUnitWidth * ViewController.videoUnitSec)
-
         if let uiImage = videoThumbnails[safe: index]  {
             DispatchQueue.main.async {
-                self.thumbnailImageView.image = uiImage
+                self.thumbnailImageView.setImage(image: uiImage)
             }
         }
+        
+        let a = CGFloat(CMTimeGetSeconds(totalDuration)) * scrollOffset / (videoCollectionView.contentSize.width - 1000.0)
+        thumbnailImageView.setProgress(progress: a, total: CMTimeGetSeconds(totalDuration))
     }
 
 }
@@ -191,19 +203,22 @@ extension ViewController: UICollectionViewDelegateFlowLayout {
             let ratio = duration / ViewController.videoUnitSec
             return CGSize(width: ratio * ViewController.videoUnitWidth, height: 100)
         } else {
-            return CGSize(width: 1000, height: 100)
+            return CGSize(width: ViewController.emptyCellWidth, height: 100)
         }
     }
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        guard !videoAssets.isEmpty else { return }
         let scrollOffset = scrollView.contentOffset.x
         print("scroll offset : ", scrollOffset)
         updateThumbnailAtScrollPosition(scrollOffset: scrollOffset + ViewController.videoCollectionViewInsetvideoCollectionViewInset)
     }
+
     
     fileprivate func reorderItems(coordinator: UICollectionViewDropCoordinator, destinationIndexPath: IndexPath, collectionView: UICollectionView) {
         if let item = coordinator.items.first,
-           let sourceIndexPath = item.sourceIndexPath
+           let sourceIndexPath = item.sourceIndexPath,
+           let _ = videoAssets[safe: destinationIndexPath.item]
         {
             collectionView.performBatchUpdates {
                 self.videoAssets.remove(at: sourceIndexPath.item)
@@ -244,10 +259,10 @@ extension ViewController: UICollectionViewDragDelegate {
             let videoAsset = videoAssets[safe: indexPath.item],
             let urlAsset = videoAsset as? AVURLAsset
         else { return [] }
-        // URL을 통해 NSItemProvider 생성
+        
         let itemProvider = NSItemProvider(object: urlAsset.url as NSURL)
         let dragItem = UIDragItem(itemProvider: itemProvider)
-        dragItem.localObject = videoAsset // 로컬 오브젝트로 비디오 자산 설정
+        dragItem.localObject = videoAsset// 로컬 오브젝트로 비디오 자산 설정
         return [dragItem]
     }
     
@@ -299,6 +314,7 @@ private extension ViewController {
         videoThumbnails.removeAll()
         videoAssets.removeAll()
         videoCollectionView.reloadData()
+        thumbnailImageView.setImage(image: nil)
     }
     
     @objc private func addVideosTapped(_ sender: UIButton) {

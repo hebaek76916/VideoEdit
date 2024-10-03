@@ -18,6 +18,8 @@
 		138EBAEB2CAAE4AC00D1821F /* VideoEditUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138EBAEA2CAAE4AC00D1821F /* VideoEditUITestsLaunchTests.swift */; };
 		138EBAFB2CAC042700D1821F /* VideoCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138EBAFA2CAC042700D1821F /* VideoCell.swift */; };
 		138EBAFD2CAD2C2000D1821F /* Extensions+Array.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138EBAFC2CAD2C2000D1821F /* Extensions+Array.swift */; };
+		138EBB012CAEB81500D1821F /* ThumbnailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138EBB002CAEB81500D1821F /* ThumbnailView.swift */; };
+		138EBB032CAEBDDF00D1821F /* Extension+String.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138EBB022CAEBDDF00D1821F /* Extension+String.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -53,6 +55,8 @@
 		138EBAEA2CAAE4AC00D1821F /* VideoEditUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoEditUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		138EBAFA2CAC042700D1821F /* VideoCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoCell.swift; sourceTree = "<group>"; };
 		138EBAFC2CAD2C2000D1821F /* Extensions+Array.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Extensions+Array.swift"; sourceTree = "<group>"; };
+		138EBB002CAEB81500D1821F /* ThumbnailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailView.swift; sourceTree = "<group>"; };
+		138EBB022CAEBDDF00D1821F /* Extension+String.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Extension+String.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -107,7 +111,9 @@
 				138EBAC92CAAE4AB00D1821F /* SceneDelegate.swift */,
 				138EBACB2CAAE4AB00D1821F /* ViewController.swift */,
 				138EBAFA2CAC042700D1821F /* VideoCell.swift */,
+				138EBB002CAEB81500D1821F /* ThumbnailView.swift */,
 				138EBAFC2CAD2C2000D1821F /* Extensions+Array.swift */,
+				138EBB022CAEBDDF00D1821F /* Extension+String.swift */,
 				138EBAF72CAB82B600D1821F /* ViewControllers */,
 				138EBACD2CAAE4AB00D1821F /* Main.storyboard */,
 				138EBAD02CAAE4AC00D1821F /* Assets.xcassets */,
@@ -273,8 +279,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				138EBACC2CAAE4AB00D1821F /* ViewController.swift in Sources */,
+				138EBB032CAEBDDF00D1821F /* Extension+String.swift in Sources */,
 				138EBAFD2CAD2C2000D1821F /* Extensions+Array.swift in Sources */,
 				138EBAFB2CAC042700D1821F /* VideoCell.swift in Sources */,
+				138EBB012CAEB81500D1821F /* ThumbnailView.swift in Sources */,
 				138EBAC82CAAE4AB00D1821F /* AppDelegate.swift in Sources */,
 				138EBACA2CAAE4AB00D1821F /* SceneDelegate.swift in Sources */,
 			);
