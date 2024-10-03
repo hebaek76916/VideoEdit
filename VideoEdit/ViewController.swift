@@ -24,6 +24,7 @@ class ViewController: UIViewController {
         button.heightAnchor.constraint(equalToConstant: 60).isActive = true
         return button
     }()
+    
     private let removeAllButton: UIButton = {
         let button = UIButton()
         button.setTitle("Remove All", for: .normal)
@@ -89,6 +90,7 @@ class ViewController: UIViewController {
     
     private func generateThumbnails() {
         videoThumbnails.removeAll()
+        
         for asset in videoAssets {
             let imageGenerator = AVAssetImageGenerator(asset: asset)
             imageGenerator.appliesPreferredTrackTransform = true
@@ -104,6 +106,11 @@ class ViewController: UIViewController {
                 } catch {
                     print("썸네일 생성 실패: \(error.localizedDescription)")
                 }
+            }
+        }
+        if let first = videoThumbnails.first {
+            DispatchQueue.main.async {
+                self.thumbnailImageView.image = first
             }
         }
     }
