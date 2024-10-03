@@ -9,9 +9,10 @@ import UIKit
 import PhotosUI
 
 class ViewController: UIViewController {
-    
     static let videoUnitSec: Double = 30.0
     static let videoUnitWidth: Double = 100.0
+
+    static let videoCollectionViewInsetvideoCollectionViewInset: Double = 100.0
     
     private let addVideoButton: UIButton = {
         let button = UIButton()
@@ -23,7 +24,6 @@ class ViewController: UIViewController {
         button.heightAnchor.constraint(equalToConstant: 60).isActive = true
         return button
     }()
-    
     private let removeAllButton: UIButton = {
         let button = UIButton()
         button.setTitle("Remove All", for: .normal)
@@ -34,7 +34,6 @@ class ViewController: UIViewController {
         button.heightAnchor.constraint(equalToConstant: 60).isActive = true
         return button
     }()
-    
     
    private var videoCollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -48,7 +47,7 @@ class ViewController: UIViewController {
         collectionView.showsHorizontalScrollIndicator = true
         collectionView.alwaysBounceHorizontal = true
         collectionView.dragInteractionEnabled = true
-//       collectionView.contentInset = .init(top: 4, left: 4, bottom: 4, right: 4)
+       collectionView.contentInset = .init(top: 0, left: ViewController.videoCollectionViewInsetvideoCollectionViewInset, bottom: 0, right: 0)
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         return collectionView
     }()
@@ -69,6 +68,7 @@ class ViewController: UIViewController {
     var videoAssets: [AVAsset] = []
     var videoThumbnails: [UIImage] = [] // 썸네일 이미지 배열
     var totalDuration: CMTime? // 비디오의 총 길이 저장
+    private let additionalCells = 1 // 추가 여유 공간을 위한 빈 셀
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -78,32 +78,15 @@ class ViewController: UIViewController {
         removeAllButton.addTarget(self, action: #selector(removeAllTapped), for: .touchUpInside)
     }
     
-    @objc func removeAllTapped(_ sender: UIButton) {
-        videoThumbnails.removeAll()
-        videoAssets.removeAll()
-        videoCollectionView.reloadData()
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+
+        // 컬렉션 뷰의 contentSize에 추가적인 스크롤 영역을 설정 (300포인트 확장)
+        let additionalScrollSpace: CGFloat = 300
+        let currentContentWidth = videoCollectionView.contentSize.width
+        videoCollectionView.contentSize = CGSize(width: currentContentWidth + additionalScrollSpace, height: videoCollectionView.contentSize.height)
     }
     
-    @objc func addVideosTapped(_ sender: UIButton) {
-        var config =  PHPickerConfiguration(photoLibrary: PHPhotoLibrary.shared())
-        config.selectionLimit = 0 // 제한 없음
-        config.filter = .any(of: [.videos])
-        config.preferredAssetRepresentationMode = .current
-
-        let picker = PHPickerViewController(configuration: config)
-        picker.delegate = self
-        present(picker, animated: true, completion: nil)
-    }
-    
-    private func configureVideoCollectionView() {
-        videoCollectionView.delegate = self
-        
-        videoCollectionView.dataSource = self
-        videoCollectionView.dragDelegate = self
-        videoCollectionView.dropDelegate = self
-        videoCollectionView.register(VideoCell.self, forCellWithReuseIdentifier: "VideoCell")
-    }
-
     private func generateThumbnails() {
         videoThumbnails.removeAll()
         for asset in videoAssets {
@@ -145,11 +128,8 @@ extension ViewController: PHPickerViewControllerDelegate {
 
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
         picker.dismiss(animated: true, completion: nil)
-        
         guard !results.isEmpty else { return }
-
         loadingIndicator.startAnimating()
-        
         let dispatchGroup = DispatchGroup()
 
         for result in results {
@@ -199,15 +179,19 @@ extension ViewController: UICollectionViewDelegateFlowLayout {
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let videoAsset = videoAssets[indexPath.item]
-        let duration = getVideoDuration(asset: videoAsset)
-        let ratio = duration / ViewController.videoUnitSec
-        return CGSize(width: ratio * ViewController.videoUnitWidth, height: 100)
+        if let videoAsset = videoAssets[safe: indexPath.item] {
+            let duration = getVideoDuration(asset: videoAsset)
+            let ratio = duration / ViewController.videoUnitSec
+            return CGSize(width: ratio * ViewController.videoUnitWidth, height: 100)
+        } else {
+            return CGSize(width: 1000, height: 100)
+        }
     }
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         let scrollOffset = scrollView.contentOffset.x
-        updateThumbnailAtScrollPosition(scrollOffset: scrollOffset)
+        print("scroll offset : ", scrollOffset)
+        updateThumbnailAtScrollPosition(scrollOffset: scrollOffset + ViewController.videoCollectionViewInsetvideoCollectionViewInset)
     }
     
     fileprivate func reorderItems(coordinator: UICollectionViewDropCoordinator, destinationIndexPath: IndexPath, collectionView: UICollectionView) {
@@ -230,16 +214,20 @@ extension ViewController: UICollectionViewDelegateFlowLayout {
 
 extension ViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return videoAssets.count
+        return videoAssets.count + additionalCells
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "VideoCell", for: indexPath) as! VideoCell
-        let videoAsset = videoAssets[indexPath.item]
-        cell.configure(with: videoAsset)
+        if let videoAsset = videoAssets[safe: indexPath.item] {
+            cell.configure(with: videoAsset)
+        } else {
+            cell.contentView.layer.borderWidth = 2.0
+            cell.contentView.layer.borderColor = UIColor.gray.cgColor
+            cell.backgroundColor = .systemPink
+        }
         return cell
     }
-    
 }
 
 extension ViewController: UICollectionViewDragDelegate {
@@ -289,11 +277,39 @@ extension ViewController: UICollectionViewDropDelegate {
     }
 }
 
-//MARK: Set Up UI
+//MARK: Set Up
 private extension ViewController {
+    
+    func configureVideoCollectionView() {
+        videoCollectionView.delegate = self
+        videoCollectionView.dataSource = self
+        videoCollectionView.dragDelegate = self
+        videoCollectionView.dropDelegate = self
+        videoCollectionView.register(VideoCell.self, forCellWithReuseIdentifier: "VideoCell")
+    }
+
+    @objc private func removeAllTapped(_ sender: UIButton) {
+        videoThumbnails.removeAll()
+        videoAssets.removeAll()
+        videoCollectionView.reloadData()
+    }
+    
+    @objc private func addVideosTapped(_ sender: UIButton) {
+        var config =  PHPickerConfiguration(photoLibrary: PHPhotoLibrary.shared())
+        config.selectionLimit = 0 // 제한 없음
+        config.filter = .any(of: [.videos])
+        config.preferredAssetRepresentationMode = .current
+        
+        let picker = PHPickerViewController(configuration: config)
+        picker.delegate = self
+        present(picker, animated: true, completion: nil)
+    }
+    
     func setUpUI() {
+        view.backgroundColor = .black
         setUpAddVideoButton()
         setUpVideoCollectionView()
+        setUpVideoCollectionThresholdLineView()
         setUpThumbnailImageView()
         setUpLoadingIndicator()
         setUpRemoveAllButton()
@@ -317,13 +333,28 @@ private extension ViewController {
             ].forEach { $0.isActive = true }
         }
         
+        func setUpVideoCollectionThresholdLineView() {
+            let lineView = UIView()
+            lineView.translatesAutoresizingMaskIntoConstraints = false
+            lineView.backgroundColor = .white
+            if let collectionSuperView = videoCollectionView.superview {
+                collectionSuperView.addSubview(lineView)
+                [
+                    lineView.leadingAnchor.constraint(equalTo: collectionSuperView.leadingAnchor, constant: ViewController.videoCollectionViewInsetvideoCollectionViewInset),
+                    lineView.topAnchor.constraint(equalTo: videoCollectionView.topAnchor),
+                    lineView.bottomAnchor.constraint(equalTo: videoCollectionView.bottomAnchor),
+                    lineView.widthAnchor.constraint(equalToConstant: 3)
+                ].forEach { $0.isActive = true }
+            }
+        }
+        
         func setUpThumbnailImageView() {
             view.addSubview(thumbnailImageView)
             [
                 thumbnailImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
                 thumbnailImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
                 thumbnailImageView.bottomAnchor.constraint(equalTo: videoCollectionView.topAnchor, constant: -20),
-                thumbnailImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: -20)
+                thumbnailImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20)
             ].forEach { $0.isActive = true}
         }
         
@@ -340,4 +371,5 @@ private extension ViewController {
             view.addSubview(loadingIndicator)
         }
     }
+    
 }

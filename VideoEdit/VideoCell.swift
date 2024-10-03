@@ -10,7 +10,7 @@ import AVFoundation
 
 class VideoCell: UICollectionViewCell {
     
-    let thumbnailImageView = UIImageView()
+    private let thumbnailImageView = UIImageView()
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -47,7 +47,7 @@ class VideoCell: UICollectionViewCell {
     }
 }
 
-extension VideoCell {
+private extension VideoCell {
     func setUpUI() {
         thumbnailImageView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(thumbnailImageView)
