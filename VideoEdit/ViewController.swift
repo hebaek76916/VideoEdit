@@ -24,6 +24,18 @@ class ViewController: UIViewController {
         return button
     }()
     
+    private let removeAllButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("Remove All", for: .normal)
+        button.titleLabel?.textColor = .white
+        button.backgroundColor = .blue
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.widthAnchor.constraint(equalToConstant: 60).isActive = true
+        button.heightAnchor.constraint(equalToConstant: 60).isActive = true
+        return button
+    }()
+    
+    
    private var videoCollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.minimumInteritemSpacing = 0
@@ -35,6 +47,8 @@ class ViewController: UIViewController {
         collectionView.isScrollEnabled = true
         collectionView.showsHorizontalScrollIndicator = true
         collectionView.alwaysBounceHorizontal = true
+        collectionView.dragInteractionEnabled = true
+//       collectionView.contentInset = .init(top: 4, left: 4, bottom: 4, right: 4)
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         return collectionView
     }()
@@ -54,8 +68,6 @@ class ViewController: UIViewController {
     
     var videoAssets: [AVAsset] = []
     var videoThumbnails: [UIImage] = [] // 썸네일 이미지 배열
-    var mergedVideoAsset: AVAsset?  // 결합된 비디오를 기반으로 생성된 AVAsset
-    var mergedVideoURL: URL?
     var totalDuration: CMTime? // 비디오의 총 길이 저장
     
     override func viewDidLoad() {
@@ -63,6 +75,13 @@ class ViewController: UIViewController {
         configureVideoCollectionView()
         setUpUI()
         addVideoButton.addTarget(self, action: #selector(addVideosTapped), for: .touchUpInside)
+        removeAllButton.addTarget(self, action: #selector(removeAllTapped), for: .touchUpInside)
+    }
+    
+    @objc func removeAllTapped(_ sender: UIButton) {
+        videoThumbnails.removeAll()
+        videoAssets.removeAll()
+        videoCollectionView.reloadData()
     }
     
     @objc func addVideosTapped(_ sender: UIButton) {
@@ -78,6 +97,7 @@ class ViewController: UIViewController {
     
     private func configureVideoCollectionView() {
         videoCollectionView.delegate = self
+        
         videoCollectionView.dataSource = self
         videoCollectionView.dragDelegate = self
         videoCollectionView.dropDelegate = self
@@ -85,6 +105,7 @@ class ViewController: UIViewController {
     }
 
     private func generateThumbnails() {
+        videoThumbnails.removeAll()
         for asset in videoAssets {
             let imageGenerator = AVAssetImageGenerator(asset: asset)
             imageGenerator.appliesPreferredTrackTransform = true
@@ -123,8 +144,8 @@ class ViewController: UIViewController {
 extension ViewController: PHPickerViewControllerDelegate {
 
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
-        // 피커 닫기
         picker.dismiss(animated: true, completion: nil)
+        
         guard !results.isEmpty else { return }
 
         loadingIndicator.startAnimating()
@@ -184,13 +205,30 @@ extension ViewController: UICollectionViewDelegateFlowLayout {
         return CGSize(width: ratio * ViewController.videoUnitWidth, height: 100)
     }
     
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let scrollOffset = scrollView.contentOffset.x
+        updateThumbnailAtScrollPosition(scrollOffset: scrollOffset)
+    }
+    
+    fileprivate func reorderItems(coordinator: UICollectionViewDropCoordinator, destinationIndexPath: IndexPath, collectionView: UICollectionView) {
+        if let item = coordinator.items.first,
+           let sourceIndexPath = item.sourceIndexPath
+        {
+            collectionView.performBatchUpdates {
+                self.videoAssets.remove(at: sourceIndexPath.item)
+                self.videoAssets.insert((item.dragItem.localObject as? AVAsset)!, at: destinationIndexPath.item)
+                collectionView.deleteItems(at: [sourceIndexPath])
+                collectionView.insertItems(at: [destinationIndexPath])
+            } completion: { _ in
+                self.generateThumbnails()
+            }
+            coordinator.drop(item.dragItem, toItemAt: destinationIndexPath)
+        }
+    }
+    
 }
 
-extension ViewController: UICollectionViewDelegate,
-                          UICollectionViewDataSource,
-                          UICollectionViewDragDelegate,
-                          UICollectionViewDropDelegate
-{
+extension ViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return videoAssets.count
     }
@@ -202,38 +240,53 @@ extension ViewController: UICollectionViewDelegate,
         return cell
     }
     
+}
+
+extension ViewController: UICollectionViewDragDelegate {
+    
     func collectionView(_ collectionView: UICollectionView, itemsForBeginning session: UIDragSession, at indexPath: IndexPath) -> [UIDragItem] {
-        let videoAsset = videoAssets[indexPath.item]
-        // AVURLAsset으로 캐스팅하여 URL을 얻음
-        if let urlAsset = videoAsset as? AVURLAsset {
-            let itemProvider = NSItemProvider(object: urlAsset.url as NSURL)
-            let dragItem = UIDragItem(itemProvider: itemProvider)
-            return [dragItem]
+        guard
+            let videoAsset = videoAssets[safe: indexPath.item],
+            let urlAsset = videoAsset as? AVURLAsset
+        else { return [] }
+        // URL을 통해 NSItemProvider 생성
+        let itemProvider = NSItemProvider(object: urlAsset.url as NSURL)
+        let dragItem = UIDragItem(itemProvider: itemProvider)
+        dragItem.localObject = videoAsset // 로컬 오브젝트로 비디오 자산 설정
+        return [dragItem]
+    }
+    
+}
+
+extension ViewController: UICollectionViewDropDelegate {
+    
+    func collectionView(_ collectionView: UICollectionView, dropSessionDidUpdate session: UIDropSession, withDestinationIndexPath destinationIndexPath: IndexPath?) -> UICollectionViewDropProposal {
+        if collectionView.hasActiveDrag {
+            return UICollectionViewDropProposal(operation: .move, intent: .insertAtDestinationIndexPath)
         }
-        
-        return []
+        return UICollectionViewDropProposal(operation: .forbidden)
+    }
+    
+    private func collectionView(_ collectionView: UICollectionView, canHandle session: UIDragSession) -> Bool {
+        // 드롭된 항목이 NSURL 타입인지 확인
+        return session.items.contains { item in
+            item.itemProvider.hasItemConformingToTypeIdentifier("public.url")
+        }
     }
     
     func collectionView(_ collectionView: UICollectionView, performDropWith coordinator: UICollectionViewDropCoordinator) {
-        guard let destinationIndexPath = coordinator.destinationIndexPath else { return }
         
-        for item in coordinator.items {
-            if let sourceIndexPath = item.sourceIndexPath {
-                let asset = videoAssets.remove(at: sourceIndexPath.item)
-                videoAssets.insert(asset, at: destinationIndexPath.item)
-                collectionView.performBatchUpdates({
-                    collectionView.deleteItems(at: [sourceIndexPath])
-                    collectionView.insertItems(at: [destinationIndexPath])
-                }, completion: nil)
-            }
+        var destinationIndexPath: IndexPath
+        if let indexPath = coordinator.destinationIndexPath {
+            destinationIndexPath = indexPath
+        } else {
+            let row = collectionView.numberOfItems(inSection: 0)
+            destinationIndexPath = IndexPath(item: row - 1, section: 0)
+        }
+        if coordinator.proposal.operation == .move {
+            reorderItems(coordinator: coordinator, destinationIndexPath: destinationIndexPath, collectionView: collectionView)
         }
     }
-    
-    func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        let scrollOffset = scrollView.contentOffset.x
-        updateThumbnailAtScrollPosition(scrollOffset: scrollOffset)
-    }
-    
 }
 
 //MARK: Set Up UI
@@ -243,6 +296,7 @@ private extension ViewController {
         setUpVideoCollectionView()
         setUpThumbnailImageView()
         setUpLoadingIndicator()
+        setUpRemoveAllButton()
         
         func setUpAddVideoButton() {
             view.addSubview(addVideoButton)
@@ -271,6 +325,14 @@ private extension ViewController {
                 thumbnailImageView.bottomAnchor.constraint(equalTo: videoCollectionView.topAnchor, constant: -20),
                 thumbnailImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: -20)
             ].forEach { $0.isActive = true}
+        }
+        
+        func setUpRemoveAllButton() {
+            view.addSubview(removeAllButton)
+            [
+                removeAllButton.centerYAnchor.constraint(equalTo: addVideoButton.centerYAnchor),
+                removeAllButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
+            ].forEach { $0.isActive = true }
         }
         
         func setUpLoadingIndicator() {

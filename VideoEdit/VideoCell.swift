@@ -9,17 +9,21 @@ import UIKit
 import AVFoundation
 
 class VideoCell: UICollectionViewCell {
+    
     let thumbnailImageView = UIImageView()
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        thumbnailImageView.frame = contentView.bounds
-        thumbnailImageView.contentMode = .scaleAspectFit
-        contentView.addSubview(thumbnailImageView)
+        setUpUI()
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        thumbnailImageView.image = nil
     }
     
     // 썸네일 설정 함수
@@ -40,5 +44,18 @@ class VideoCell: UICollectionViewCell {
                 print("썸네일 생성 실패: \(error)")
             }
         }
+    }
+}
+
+extension VideoCell {
+    func setUpUI() {
+        thumbnailImageView.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(thumbnailImageView)
+        [
+            thumbnailImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            thumbnailImageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            thumbnailImageView.topAnchor.constraint(equalTo: contentView.topAnchor),
+            thumbnailImageView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
+        ].forEach { $0.isActive = true }
     }
 }

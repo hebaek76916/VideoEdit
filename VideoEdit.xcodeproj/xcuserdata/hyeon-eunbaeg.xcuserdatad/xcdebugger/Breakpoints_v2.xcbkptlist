@@ -14,8 +14,8 @@
             filePath = "VideoEdit/ViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "114"
-            endingLineNumber = "114"
+            startingLineNumber = "135"
+            endingLineNumber = "135"
             landmarkName = "updateThumbnailAtScrollPosition(scrollOffset:)"
             landmarkType = "7">
             <Locations>
@@ -48,6 +48,36 @@
                   startingLineNumber = "120"
                   endingLineNumber = "120"
                   offsetFromSymbolStart = "1232">
+               </Location>
+               <Location
+                  uuid = "A7B181D6-8061-420D-BC8A-0355610754A9 - d5a14312b29a5405"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "VideoEdit.ViewController.updateThumbnailAtScrollPosition(scrollOffset: CoreGraphics.CGFloat) -&gt; ()"
+                  moduleName = "VideoEdit"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/hyeon-eunbaeg/Desktop/VideoEdit/VideoEdit/ViewController.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "113"
+                  endingLineNumber = "113"
+                  offsetFromSymbolStart = "856">
+               </Location>
+               <Location
+                  uuid = "A7B181D6-8061-420D-BC8A-0355610754A9 - d5a14312b29a5405"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "VideoEdit.ViewController.updateThumbnailAtScrollPosition(scrollOffset: CoreGraphics.CGFloat) -&gt; ()"
+                  moduleName = "VideoEdit"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/hyeon-eunbaeg/Desktop/VideoEdit/VideoEdit/ViewController.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "113"
+                  endingLineNumber = "113"
+                  offsetFromSymbolStart = "1028">
                </Location>
             </Locations>
          </BreakpointContent>
