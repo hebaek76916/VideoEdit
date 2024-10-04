@@ -80,7 +80,7 @@ class VideoCollectionViewDelegate: NSObject, UICollectionViewDelegateFlowLayout,
                 collectionView.deleteItems(at: [sourceIndexPath])
                 collectionView.insertItems(at: [destinationIndexPath])
             } completion: { _ in
-                self.parentViewController?.generateThumbnails()
+//                self.parentViewController?.generateThumbnails()
             }
             coordinator.drop(item.dragItem, toItemAt: destinationIndexPath)
         }

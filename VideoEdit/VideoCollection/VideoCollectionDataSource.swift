@@ -11,23 +11,34 @@ import AVFoundation
 class VideoAsset {
     let asset: AVAsset
     var duration: CMTime
-    var firstThumbnail: CGImage?
-    
-    init(asset: AVAsset, duration: CMTime, firstThumbnail: CGImage? = nil) {
-        self.asset = asset
-        self.duration = duration
-        self.firstThumbnail = firstThumbnail
+    var thumbnails: [CGImage] = []
+    var firstThumbnail: CGImage? {
+        thumbnails.first
     }
     
-    func setThumbnail(cgImage: CGImage) {
-        self.firstThumbnail = cgImage
+    init(asset: AVAsset, duration: CMTime) {
+        self.asset = asset
+        self.duration = duration
+    }
+
+    func setThumbnails(cgImages: [CGImage]) {
+        self.thumbnails = cgImages
     }
 }
 
 class VideoCollectionViewDataSource: NSObject, UICollectionViewDataSource {
 
     var videoAssets: [VideoAsset] = []
-    var videoThumbnails: [UIImage] = []
+    var videoThumbnails: [CGImage] {
+        self.videoAssets.compactMap { $0.thumbnails }.flatMap { $0 }
+    }
+    
+    var totalDuration: CMTime {
+        return videoAssets.map { $0.duration }.reduce(.zero) { partialResult, duration in
+            CMTimeAdd(partialResult, duration)
+        }
+    }
+    
     private let additionalCells = 1 // 추가 여유 공간을 위한 빈 셀
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
