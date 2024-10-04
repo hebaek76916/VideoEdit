@@ -14,6 +14,8 @@ class ViewController: UIViewController {
     static let videoCollectionViewInsetvideoCollectionViewInset: Double = 100.0
     static let emptyCellWidth: Double = 1000.0
     
+    private var scale: CGFloat = 1.0 // 초기 스케일
+    
     private let addVideoButton: UIButton = {
         let button = UIButton()
         button.setTitle("Add Video", for: .normal)
@@ -93,35 +95,66 @@ class ViewController: UIViewController {
         setUpUI()
         addVideoButton.addTarget(self, action: #selector(addVideosTapped), for: .touchUpInside)
         removeAllButton.addTarget(self, action: #selector(removeAllTapped), for: .touchUpInside)
+        
+        // 핀치 제스처 인식기 추가
+        let pinchGesture = UIPinchGestureRecognizer(target: self, action: #selector(handlePinchGesture(_:)))
+        videoCollectionView.addGestureRecognizer(pinchGesture)
     }
     
+    @objc private func handlePinchGesture(_ gesture: UIPinchGestureRecognizer) {
+        // 스케일 값 제한 (0.8 ~ 2.0 사이로 제한)
+        scale = max(0.8, min(gesture.scale, 2.0))
+        
+        if gesture.state == .changed || gesture.state == .ended {
+            // 스케일 값에 따라 썸네일 다시 생성
+//            self.generateThumbnails()
+            videoCollectionView.collectionViewLayout.invalidateLayout() // 레이아웃 무효화
+        }
+    }
+//    
+//    private func generateThumbnails_1() async throws -> CGImage? {
+//        for asset in videoAssets {
+//            let generator = AVAssetImageGenerator(asset: asset)
+//            let thumbnail = try await generator.image(at: totalDuration!).image
+//            return thumbnail
+//        }
+//        return nil
+//    }
+//    
     private func generateThumbnails() {
         videoThumbnails.removeAll()
-        
-        for asset in videoAssets {
-            let imageGenerator = AVAssetImageGenerator(asset: asset)
-            imageGenerator.appliesPreferredTrackTransform = true
-            
-            let durationInSeconds = CMTimeGetSeconds(asset.duration)
-            // 비디오의 길이에 따라 1초마다 썸네일 생성
-            for second in 0..<Int(durationInSeconds) {
-                let thumbnailTime = CMTime(seconds: Double(second), preferredTimescale: 600)
-                do {
-                    let cgImage = try imageGenerator.copyCGImage(at: thumbnailTime, actualTime: nil)
-                    let uiImage = UIImage(cgImage: cgImage)
-                    videoThumbnails.append(uiImage)
-                } catch {
-                    print("썸네일 생성 실패: \(error.localizedDescription)")
+
+        // 백그라운드에서 썸네일 생성
+        DispatchQueue.global(qos: .userInitiated).async {
+            for asset in self.videoAssets {
+                let imageGenerator = AVAssetImageGenerator(asset: asset)
+                imageGenerator.appliesPreferredTrackTransform = true
+                
+                let durationInSeconds = CMTimeGetSeconds(asset.duration)
+                let interval = 1.0 / Double(self.scale)
+                var second: Double = 0
+                
+                while second < durationInSeconds {
+                    let thumbnailTime = CMTime(seconds: second, preferredTimescale: 600)
+                    do {
+                        let cgImage = try imageGenerator.copyCGImage(at: thumbnailTime, actualTime: nil)
+                        let uiImage = UIImage(cgImage: cgImage)
+                        
+                        // 메인 스레드에서 UI 업데이트
+                        DispatchQueue.main.async {
+                            self.videoThumbnails.append(uiImage)
+                            // 썸네일 업데이트, 필요 시 컬렉션 뷰 갱신
+//                            self.videoCollectionView.reloadData()
+                        }
+                    } catch {
+                        print("썸네일 생성 실패: \(error.localizedDescription)")
+                    }
+                    second += interval
                 }
             }
         }
-        if let first = videoThumbnails.first {
-            DispatchQueue.main.async {
-                self.thumbnailImageView.setImage(image: first)
-            }
-        }
     }
-
+    
     // 스크롤된 시점에 맞춰 해당 썸네일을 표시
     func updateThumbnailAtScrollPosition(scrollOffset: CGFloat) {
         guard
@@ -130,14 +163,16 @@ class ViewController: UIViewController {
         else { return }
         
         // 현재 시간에 해당하는 썸네일 인덱스 계산(역산)
-        let index = Int(scrollOffset / ViewController.videoUnitWidth * ViewController.videoUnitSec)
-        if let uiImage = videoThumbnails[safe: index]  {
+        let index = CGFloat((scrollOffset * ViewController.videoUnitSec) / (ViewController.videoUnitWidth))
+        let tuned = Int(index / scale)
+        
+        if let uiImage = videoThumbnails[safe: tuned]  {
             DispatchQueue.main.async {
                 self.thumbnailImageView.setImage(image: uiImage)
             }
         }
         
-        let a = CGFloat(CMTimeGetSeconds(totalDuration)) * scrollOffset / (videoCollectionView.contentSize.width - 1000.0)
+        let a = CGFloat((CMTimeGetSeconds(totalDuration)) * scrollOffset) / (contentWidth)
         thumbnailImageView.setProgress(progress: a, total: CMTimeGetSeconds(totalDuration))
     }
 
@@ -201,9 +236,9 @@ extension ViewController: UICollectionViewDelegateFlowLayout {
         if let videoAsset = videoAssets[safe: indexPath.item] {
             let duration = getVideoDuration(asset: videoAsset)
             let ratio = duration / ViewController.videoUnitSec
-            return CGSize(width: ratio * ViewController.videoUnitWidth, height: 100)
+            return CGSize(width: ratio * ViewController.videoUnitWidth * scale, height: 100)
         } else {
-            return CGSize(width: ViewController.emptyCellWidth, height: 100)
+            return CGSize(width: ViewController.emptyCellWidth * scale, height: 100)
         }
     }
     
