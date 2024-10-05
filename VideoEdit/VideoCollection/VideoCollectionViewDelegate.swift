@@ -8,13 +8,17 @@
 import UIKit.UICollectionViewFlowLayout
 import AVFoundation
 
+protocol VideoCollectionDelegate: NSObject {
+    func updateThumbnailAtScrollPosition(scrollOffset: CGFloat)
+}
+
 class VideoCollectionViewDelegate: NSObject, UICollectionViewDelegateFlowLayout, UICollectionViewDragDelegate, UICollectionViewDropDelegate {
     
     var scale: CGFloat = 1.0
-    weak var parentViewController: ViewController?
+    weak var parentViewController: VideoCollectionDelegate?
     weak var dataSource: VideoCollectionViewDataSource? // Reference to the data source
 
-    init(parentViewController: ViewController, dataSource: VideoCollectionViewDataSource) {
+    init(parentViewController: VideoCollectionDelegate, dataSource: VideoCollectionViewDataSource) {
         self.parentViewController = parentViewController
         self.dataSource = dataSource
     }

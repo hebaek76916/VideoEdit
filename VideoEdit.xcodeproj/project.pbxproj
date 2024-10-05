@@ -117,7 +117,6 @@
 				138EBAC72CAAE4AB00D1821F /* AppDelegate.swift */,
 				138EBAC92CAAE4AB00D1821F /* SceneDelegate.swift */,
 				138EBACB2CAAE4AB00D1821F /* ViewController.swift */,
-				138EBAFA2CAC042700D1821F /* VideoCell.swift */,
 				138EBB002CAEB81500D1821F /* ThumbnailView.swift */,
 				138EBB052CAF7F7100D1821F /* VideoCollection */,
 				138EBAF72CAB82B600D1821F /* ViewControllers */,
@@ -166,6 +165,7 @@
 			isa = PBXGroup;
 			children = (
 				138EBB062CAF7F9A00D1821F /* VideoCollectionView.swift */,
+				138EBAFA2CAC042700D1821F /* VideoCell.swift */,
 				138EBB082CAF851D00D1821F /* VideoCollectionViewDelegate.swift */,
 				138EBB0C2CAF858000D1821F /* VideoCollectionDataSource.swift */,
 			);
@@ -494,7 +494,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = Z9233Z6KZ4;
+				DEVELOPMENT_TEAM = TGDRXPGY2A;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = VideoEdit/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -523,7 +523,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = Z9233Z6KZ4;
+				DEVELOPMENT_TEAM = TGDRXPGY2A;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = VideoEdit/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

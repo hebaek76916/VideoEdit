@@ -68,7 +68,7 @@ class VideoCollectionView: UICollectionView {
         if let collectionSuperView = self.superview {
             collectionSuperView.addSubview(lineView)
             [
-                lineView.leadingAnchor.constraint(equalTo: collectionSuperView.leadingAnchor, constant: VideoCollectionView.videoCollectionViewInsetvideoCollectionViewInset),
+                lineView.leadingAnchor.constraint(equalTo: collectionSuperView.leadingAnchor, constant: VideoCollectionView.videoCollectionViewInsetvideoCollectionViewInset - 3),
                 lineView.topAnchor.constraint(equalTo: topAnchor),
                 lineView.bottomAnchor.constraint(equalTo: bottomAnchor),
                 lineView.widthAnchor.constraint(equalToConstant: 3)
