@@ -5,7 +5,7 @@
 //  Created by 현은백 on 10/4/24.
 //
 
-import UIKit
+import UIKit.UICollectionView
 import CoreMedia.CMTime
 
 class VideoCollectionViewDataSource: NSObject, UICollectionViewDataSource {

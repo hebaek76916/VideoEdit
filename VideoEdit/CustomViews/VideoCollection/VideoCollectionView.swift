@@ -5,7 +5,7 @@
 //  Created by 현은백 on 10/4/24.
 //
 
-import UIKit
+import UIKit.UICollectionView
 
 class VideoCollectionView: UICollectionView {
     

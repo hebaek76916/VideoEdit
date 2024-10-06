@@ -5,7 +5,7 @@
 //  Created by 현은백 on 10/3/24.
 //
 
-import UIKit
+import UIKit.UIView
 
 class ThumbnailView: UIView {
 

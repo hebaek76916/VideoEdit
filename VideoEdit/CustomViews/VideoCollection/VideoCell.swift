@@ -5,7 +5,7 @@
 //  Created by 현은백 on 10/1/24.
 //
 
-import UIKit
+import UIKit.UICollectionViewCell
 import AVFoundation
 
 class VideoCell: UICollectionViewCell {

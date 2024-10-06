@@ -5,7 +5,7 @@
 //  Created by 현은백 on 10/6/24.
 //
 
-import AVFoundation
+import CoreMedia.CMTime
 
 class VideoAsset {
     let assetURL: URL

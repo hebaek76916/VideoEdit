@@ -9,6 +9,13 @@ import UIKit
 import PhotosUI
 
 class ViewController: UIViewController {
+    
+    internal var thumbnailImageView: ThumbnailView = {
+        let imageView = ThumbnailView()
+        imageView.backgroundColor = .lightGray
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        return imageView
+    }()
 
     private let addVideoButton: UIButton = {
         let button = UIButton()
@@ -46,13 +53,6 @@ class ViewController: UIViewController {
        return collectionView
     }()
     
-    internal var thumbnailImageView: ThumbnailView = {
-        let imageView = ThumbnailView()
-        imageView.backgroundColor = .lightGray
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        return imageView
-    }()
-    
     private var loadingIndicator: UIActivityIndicatorView = {
         var loadingIndicator = UIActivityIndicatorView(style: .large)
         loadingIndicator.color = .white
@@ -61,7 +61,7 @@ class ViewController: UIViewController {
     }()
 
     var contentWidth: CGFloat {
-        return videoCollectionView.contentSize.width - VideoCollectionView.emptyCellWidth * videoDataSource.scale// remainingWidth
+        videoCollectionView.contentSize.width - VideoCollectionView.emptyCellWidth * videoDataSource.scale// remainingWidth
     }
 
     override func viewDidLoad() {
@@ -77,7 +77,7 @@ class ViewController: UIViewController {
         checkPhotoLibraryAuthorization()
     }
     
-    func checkPhotoLibraryAuthorization() {
+    private func checkPhotoLibraryAuthorization() {
         let status = PHPhotoLibrary.authorizationStatus()
         if status == .notDetermined {
             PHPhotoLibrary.requestAuthorization { newStatus in
@@ -145,7 +145,6 @@ extension ViewController: VideoCollectionDelegate {
     }
 
 }
-
 
 //MARK: Set Up
 private extension ViewController {
