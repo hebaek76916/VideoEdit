@@ -14,7 +14,10 @@ class ViewController: UIViewController {
         let button = UIButton()
         button.setTitle("Add Video", for: .normal)
         button.titleLabel?.textColor = .white
-        button.backgroundColor = .red
+        button.backgroundColor = .black
+        button.layer.borderWidth = 2.0
+        button.layer.borderColor = UIColor.white.cgColor
+        button.layer.cornerRadius = 16
         button.translatesAutoresizingMaskIntoConstraints = false
         button.widthAnchor.constraint(equalToConstant: 200).isActive = true
         button.heightAnchor.constraint(equalToConstant: 60).isActive = true
@@ -23,9 +26,12 @@ class ViewController: UIViewController {
     
     private let removeAllButton: UIButton = {
         let button = UIButton()
-        button.setTitle("Remove All", for: .normal)
+        button.setImage(UIImage(systemName: "trash")?.withTintColor(.white), for: .normal)
         button.titleLabel?.textColor = .white
-        button.backgroundColor = .blue
+        button.backgroundColor = .white
+        button.layer.borderWidth = 2.0
+        button.layer.borderColor = UIColor.white.cgColor
+        button.layer.cornerRadius = 16
         button.translatesAutoresizingMaskIntoConstraints = false
         button.widthAnchor.constraint(equalToConstant: 60).isActive = true
         button.heightAnchor.constraint(equalToConstant: 60).isActive = true
@@ -55,7 +61,7 @@ class ViewController: UIViewController {
     }()
 
     var contentWidth: CGFloat {
-        return videoCollectionView.contentSize.width - VideoCollectionView.emptyCellWidth// remainingWidth
+        return videoCollectionView.contentSize.width - VideoCollectionView.emptyCellWidth * videoDataSource.scale// remainingWidth
     }
 
     override func viewDidLoad() {
@@ -85,12 +91,6 @@ class ViewController: UIViewController {
             // 접근 권한 거부됨, 설정에서 권한을 요청하라는 메시지
         }
     }
-
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        print("🩵")
-    }
-
 }
 
 extension ViewController: PHPickerViewControllerDelegate {
@@ -128,22 +128,22 @@ extension ViewController: VideoCollectionDelegate {
     // 스크롤된 시점에 맞춰 해당 썸네일을 표시
     func updateThumbnailAtScrollPosition(scrollOffset: CGFloat) {
         guard scrollOffset >= 0 else { return }
-        
         let totalDuration = videoDataSource.totalDuration
+        let scale = videoDataSource.scale
+        let scaledUnitWidth = VideoCollectionView.videoUnitWidth * scale
         
         // 현재 시간에 해당하는 썸네일 인덱스 계산(역산)
-        let index = CGFloat((scrollOffset * VideoCollectionView.videoUnitSec) / (VideoCollectionView.videoUnitWidth))
-//        let tuned = Int(index * VideoCollectionView.scaleMax / videoCollectionView.scale)
-        let tuned = Int(index / videoCollectionView.scale)
-        if let cgImage = videoDataSource.videoThumbnails[safe: tuned]  {
-            DispatchQueue.main.async {
-                self.thumbnailImageView.setImage(image: UIImage(cgImage: cgImage))
-            }
-        }
+        let index = (scrollOffset * VideoCollectionView.videoUnitSec) / (scaledUnitWidth)
+        let tuned = Int(index) // 스케일에 따라 조정된 인덱스
         
+        let cgImage = videoDataSource.videoThumbnails[safe: tuned]
         let currentTime = CGFloat((CMTimeGetSeconds(totalDuration)) * scrollOffset) / (contentWidth)
-        thumbnailImageView.setProgress(progress: currentTime, total: CMTimeGetSeconds(totalDuration))
+        DispatchQueue.main.async {
+            self.thumbnailImageView.setImage(image: cgImage)
+            self.thumbnailImageView.setProgress(progress: currentTime, total: CMTimeGetSeconds(totalDuration))
+        }
     }
+
 }
 
 

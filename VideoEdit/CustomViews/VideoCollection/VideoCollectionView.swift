@@ -17,8 +17,6 @@ class VideoCollectionView: UICollectionView {
     static let scaleMax: CGFloat = 2.0
     static let scaleMin: CGFloat = 0.8
     
-    private(set) var scale: CGFloat = 1.0 // 초기 스케일
-    
     init() {
         let layout = UICollectionViewFlowLayout()
         layout.minimumInteritemSpacing = 0
@@ -28,13 +26,17 @@ class VideoCollectionView: UICollectionView {
         super.init(frame: .zero, collectionViewLayout: layout)
         
         register(VideoCell.self, forCellWithReuseIdentifier: VideoCell.identifier)
-        backgroundColor = .blue
+        backgroundColor = .gray
         isScrollEnabled = true
         showsHorizontalScrollIndicator = false
         alwaysBounceHorizontal = true
         dragInteractionEnabled = true
         contentInset = .init(top: 0, left: VideoCollectionView.videoCollectionViewInsetvideoCollectionViewInset, bottom: 0, right: 0)
         translatesAutoresizingMaskIntoConstraints = false
+        
+        // 핀치 제스처 인식기 추가
+        let pinchGesture = UIPinchGestureRecognizer(target: self, action: #selector(handlePinchGesture(_:)))
+        addGestureRecognizer(pinchGesture)
     }
     
     required init?(coder: NSCoder) {
@@ -44,21 +46,18 @@ class VideoCollectionView: UICollectionView {
     override func didMoveToSuperview() {
         super.didMoveToSuperview()
         setUpVideoCollectionThresholdLineView()
-        
-        // 핀치 제스처 인식기 추가
-        let pinchGesture = UIPinchGestureRecognizer(target: self, action: #selector(handlePinchGesture(_:)))
-        addGestureRecognizer(pinchGesture)
     }
     
     @objc private func handlePinchGesture(_ gesture: UIPinchGestureRecognizer) {
         // 스케일 값 제한 (0.8 ~ 2.0 사이로 제한)
-//        scale = max(VideoCollectionView.scaleMin, min(gesture.scale, VideoCollectionView.scaleMax))
-//        
-//        if gesture.state == .changed || gesture.state == .ended {
-//            collectionViewLayout.invalidateLayout() // 레이아웃 무효화
-//            // TODO: 스케일 값에 따라 썸네일 다시 생성
-////            self.generateThumbnails()
-//        }
+        let scale = max(VideoCollectionView.scaleMin, min(gesture.scale, VideoCollectionView.scaleMax))
+
+        if gesture.state == .changed || gesture.state == .ended {
+            if let videoDataSource = dataSource as? VideoCollectionViewDataSource {
+                videoDataSource.scale = scale
+                collectionViewLayout.invalidateLayout()
+            }
+        }
     }
     
     func setUpVideoCollectionThresholdLineView() {

@@ -44,9 +44,12 @@ class ThumbnailView: UIView {
             return .timeProgressString(currentTime: progress, totalTime: total)
         }()
     }
-    public func setImage(image: UIImage?) {
-        thumbnailImageView.image = image
-        if image == nil {
+    
+    public func setImage(image: CGImage?) {
+        if let cgImage = image {
+            thumbnailImageView.image = UIImage(cgImage: cgImage)
+        } else {
+            thumbnailImageView.image = nil
             progressTimeLabel.text = nil
         }
     }

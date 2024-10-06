@@ -6,32 +6,11 @@
 //
 
 import UIKit
-import AVFoundation
-
-class VideoAsset {
-    let assetURL: URL
-    var duration: CMTime
-    var thumbnails: [CGImage] = []
-    var firstThumbnail: CGImage? {
-        thumbnails.first
-    }
-    
-    init(assetURL: URL, duration: CMTime) {
-        self.assetURL = assetURL
-        self.duration = duration
-    }
-//    init(asset: AVAsset, duration: CMTime) {
-//        self.asset = asset
-//        self.duration = duration
-//    }
-
-    func setThumbnails(cgImages: [CGImage]) {
-        self.thumbnails = cgImages
-    }
-}
+import CoreMedia.CMTime
 
 class VideoCollectionViewDataSource: NSObject, UICollectionViewDataSource {
 
+    var scale: CGFloat = 1.0
     var videoAssets: [VideoAsset] = []
     var videoThumbnails: [CGImage] {
         self.videoAssets.compactMap { $0.thumbnails }.flatMap { $0 }
@@ -56,7 +35,7 @@ class VideoCollectionViewDataSource: NSObject, UICollectionViewDataSource {
         } else {
             cell.contentView.layer.borderWidth = 2.0
             cell.contentView.layer.borderColor = UIColor.gray.cgColor
-            cell.backgroundColor = .systemPink
+            cell.backgroundColor = .black.withAlphaComponent(0.6)
         }
         return cell
     }

@@ -30,9 +30,8 @@ class VideoCell: UICollectionViewCell {
     
     // 썸네일 설정 함수
     func configure(with asset: VideoAsset) {
-        if let thumbnail = asset.firstThumbnail {
-            self.thumbnailImageView.image = UIImage(cgImage: thumbnail)
-        }
+        guard let thumbnail = asset.firstThumbnail else { return }
+        self.thumbnailImageView.image = UIImage(cgImage: thumbnail)
     }
 }
 

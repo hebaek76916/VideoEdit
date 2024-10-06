@@ -15,16 +15,16 @@ protocol VideoCollectionDelegate: NSObject {
 
 class VideoCollectionViewDelegate: NSObject, UICollectionViewDelegateFlowLayout, UICollectionViewDragDelegate, UICollectionViewDropDelegate {
     
-    var scale: CGFloat = 1.0
     weak var parentViewController: VideoCollectionDelegate?
-    weak var dataSource: VideoCollectionViewDataSource? // Reference to the data source
-
+    weak var dataSource: VideoCollectionViewDataSource?
+    
     init(parentViewController: VideoCollectionDelegate, dataSource: VideoCollectionViewDataSource) {
         self.parentViewController = parentViewController
         self.dataSource = dataSource
     }
 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        let scale = (dataSource?.scale ?? 1.0)
         if let videoAsset = dataSource?.videoAssets[safe: indexPath.item] {
             let duration = CMTimeGetSeconds(videoAsset.duration)
             let ratio = duration / VideoCollectionView.videoUnitSec
@@ -42,15 +42,11 @@ class VideoCollectionViewDelegate: NSObject, UICollectionViewDelegateFlowLayout,
 
     // MARK: - Drag and Drop
     func collectionView(_ collectionView: UICollectionView, itemsForBeginning session: UIDragSession, at indexPath: IndexPath) -> [UIDragItem] {
-//        guard 
-//            let videoAsset = dataSource?.videoAssets[safe: indexPath.item],
-//            let urlAsset = videoAsset.asset as? AVURLAsset
-//        else { return [] }
-//        let itemProvider = NSItemProvider(object: urlAsset.url as NSURL)
-//        let dragItem = UIDragItem(itemProvider: itemProvider)
-//        dragItem.localObject = videoAsset
-//        return [dragItem]
-        return []
+        guard let videoAsset = dataSource?.videoAssets[safe: indexPath.item] else { return [] }
+        let itemProvider = NSItemProvider(object: videoAsset.assetURL as NSURL)
+        let dragItem = UIDragItem(itemProvider: itemProvider)
+        dragItem.localObject = videoAsset
+        return [dragItem]
     }
     
     func collectionView(_ collectionView: UICollectionView, dropSessionDidUpdate session: UIDropSession, withDestinationIndexPath destinationIndexPath: IndexPath?) -> UICollectionViewDropProposal {
@@ -85,8 +81,6 @@ class VideoCollectionViewDelegate: NSObject, UICollectionViewDelegateFlowLayout,
                 dataSource?.videoAssets.insert(object, at: destinationIndexPath.item)
                 collectionView.deleteItems(at: [sourceIndexPath])
                 collectionView.insertItems(at: [destinationIndexPath])
-            } completion: { _ in
-//                self.parentViewController?.generateThumbnails()
             }
             coordinator.drop(item.dragItem, toItemAt: destinationIndexPath)
         }
