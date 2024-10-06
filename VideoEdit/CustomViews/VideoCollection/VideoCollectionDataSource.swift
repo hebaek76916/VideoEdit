@@ -9,17 +9,21 @@ import UIKit
 import AVFoundation
 
 class VideoAsset {
-    let asset: AVAsset
+    let assetURL: URL
     var duration: CMTime
     var thumbnails: [CGImage] = []
     var firstThumbnail: CGImage? {
         thumbnails.first
     }
     
-    init(asset: AVAsset, duration: CMTime) {
-        self.asset = asset
+    init(assetURL: URL, duration: CMTime) {
+        self.assetURL = assetURL
         self.duration = duration
     }
+//    init(asset: AVAsset, duration: CMTime) {
+//        self.asset = asset
+//        self.duration = duration
+//    }
 
     func setThumbnails(cgImages: [CGImage]) {
         self.thumbnails = cgImages

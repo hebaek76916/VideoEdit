@@ -9,6 +9,7 @@ import UIKit.UICollectionViewFlowLayout
 import AVFoundation
 
 protocol VideoCollectionDelegate: NSObject {
+    var thumbnailImageView: ThumbnailView { get set }
     func updateThumbnailAtScrollPosition(scrollOffset: CGFloat)
 }
 
@@ -41,14 +42,15 @@ class VideoCollectionViewDelegate: NSObject, UICollectionViewDelegateFlowLayout,
 
     // MARK: - Drag and Drop
     func collectionView(_ collectionView: UICollectionView, itemsForBeginning session: UIDragSession, at indexPath: IndexPath) -> [UIDragItem] {
-        guard 
-            let videoAsset = dataSource?.videoAssets[safe: indexPath.item],
-            let urlAsset = videoAsset.asset as? AVURLAsset
-        else { return [] }
-        let itemProvider = NSItemProvider(object: urlAsset.url as NSURL)
-        let dragItem = UIDragItem(itemProvider: itemProvider)
-        dragItem.localObject = videoAsset
-        return [dragItem]
+//        guard 
+//            let videoAsset = dataSource?.videoAssets[safe: indexPath.item],
+//            let urlAsset = videoAsset.asset as? AVURLAsset
+//        else { return [] }
+//        let itemProvider = NSItemProvider(object: urlAsset.url as NSURL)
+//        let dragItem = UIDragItem(itemProvider: itemProvider)
+//        dragItem.localObject = videoAsset
+//        return [dragItem]
+        return []
     }
     
     func collectionView(_ collectionView: UICollectionView, dropSessionDidUpdate session: UIDropSession, withDestinationIndexPath destinationIndexPath: IndexPath?) -> UICollectionViewDropProposal {

@@ -32,15 +32,15 @@ class ViewController: UIViewController {
         return button
     }()
     
-    private var videoDataSource: VideoCollectionViewDataSource!
-    private var videoDelegate: VideoCollectionViewDelegate!
+    private var videoDataSource = VideoCollectionViewDataSource()
+    lazy var videoDelegate = VideoCollectionViewDelegate(parentViewController: self, dataSource: self.videoDataSource)
     private var videoCollectionView: VideoCollectionView = {
        let collectionView = VideoCollectionView()
        collectionView.translatesAutoresizingMaskIntoConstraints = false
        return collectionView
     }()
     
-    private var thumbnailImageView: ThumbnailView = {
+    internal var thumbnailImageView: ThumbnailView = {
         let imageView = ThumbnailView()
         imageView.backgroundColor = .lightGray
         imageView.translatesAutoresizingMaskIntoConstraints = false
@@ -49,6 +49,7 @@ class ViewController: UIViewController {
     
     private var loadingIndicator: UIActivityIndicatorView = {
         var loadingIndicator = UIActivityIndicatorView(style: .large)
+        loadingIndicator.color = .white
         loadingIndicator.hidesWhenStopped = true
         return loadingIndicator
     }()
@@ -89,27 +90,7 @@ class ViewController: UIViewController {
         super.didReceiveMemoryWarning()
         print("🩵")
     }
-    
-    func generateThumbnails(asset: VideoAsset) async -> [CGImage] {
-        var thumbnails: [CGImage] = []
-        let imageGenerator = AVAssetImageGenerator(asset: asset.asset)
-        imageGenerator.appliesPreferredTrackTransform = true
-        imageGenerator.requestedTimeToleranceBefore = CMTime(seconds: 0.1, preferredTimescale: 600)
-        imageGenerator.requestedTimeToleranceAfter = CMTime(seconds: 0.1, preferredTimescale: 600)
-        let interval = CMTime(seconds: 1, preferredTimescale: 600)
-        var currentTime = CMTime(seconds: 0, preferredTimescale: 600) // 시작 시간
-        
-        while currentTime < asset.duration {
-            do {
-                let cgImage = try await imageGenerator.image(at: currentTime).image
-                thumbnails.append(cgImage)
-            } catch {
-                print("썸네일 생성 실패: \(error.localizedDescription)")
-            }
-            currentTime = CMTimeAdd(currentTime, interval)
-        }
-        return thumbnails
-    }
+
 }
 
 extension ViewController: PHPickerViewControllerDelegate {
@@ -120,51 +101,25 @@ extension ViewController: PHPickerViewControllerDelegate {
         guard !results.isEmpty else { return }
         
         loadingIndicator.startAnimating()
-
-        let dispatchGroup = DispatchGroup()
-        let semaphore = DispatchSemaphore(value: 1) // 동시 요청 수를 2개로 제한
+        availiblityButtonsWhileProcessing(isEnable: false)
         
-        DispatchQueue.global().async {
-            for result in results {
-                guard let assetIdentifier = result.assetIdentifier else { continue }
-                
-                let fetchResult = PHAsset.fetchAssets(withLocalIdentifiers: [assetIdentifier], options: nil)
-                guard let phAsset = fetchResult.firstObject else { continue }
-                
-                let options = PHVideoRequestOptions()
-                options.version = .original
-                
-                dispatchGroup.enter()
-                semaphore.wait() // 동시 작업 수 제한
-                
-                PHImageManager.default().requestAVAsset(forVideo: phAsset, options: options) { (avAsset, _, error) in
-                    Task {
-                        defer {
-                            dispatchGroup.leave()
-                            semaphore.signal() // 다음 작업을 처리할 수 있도록 신호
-                        }
-                        
-                        if let avAsset {
-                            if let duration = try? await avAsset.load(.duration) {
-                                let asset = VideoAsset(asset: avAsset, duration: duration)
-                                // 썸네일 생성
-                                let thumbnails = await self.generateThumbnails(asset: asset)
-                                asset.thumbnails = thumbnails
-                                self.videoDataSource.videoAssets.append(asset)
-                            }
-                        } else if let error {
-                            print("AVAsset 로드 중 오류 발생: \(error)")
-                        }
-                    }
-                }
-            }
-
-            dispatchGroup.notify(queue: .main) {
+        Task {
+            let size = self.thumbnailImageView.frame.size
+            VideoAssetManager.shared.thumbnailSize = .init(width: size.width * 0.8, height: size.height * 0.8)
+            let videoAssets = await VideoAssetManager.shared.fetchAndExportVideos(results: results)
+            videoDataSource.videoAssets.append(contentsOf: videoAssets)
+            DispatchQueue.main.async {
                 // 모든 비디오 처리 후 UI 갱신
                 self.loadingIndicator.stopAnimating()
+                self.availiblityButtonsWhileProcessing(isEnable: true)
                 self.videoCollectionView.reloadData()
             }
         }
+    }
+    
+    private func availiblityButtonsWhileProcessing(isEnable: Bool) {
+        removeAllButton.isEnabled = isEnable
+        addVideoButton.isEnabled = isEnable
     }
 }
 
@@ -172,9 +127,7 @@ extension ViewController: VideoCollectionDelegate {
     
     // 스크롤된 시점에 맞춰 해당 썸네일을 표시
     func updateThumbnailAtScrollPosition(scrollOffset: CGFloat) {
-        guard
-            scrollOffset >= 0
-        else { return }
+        guard scrollOffset >= 0 else { return }
         
         let totalDuration = videoDataSource.totalDuration
         
@@ -198,9 +151,6 @@ extension ViewController: VideoCollectionDelegate {
 private extension ViewController {
     
     func configureVideoCollectionView() {
-        videoDataSource = VideoCollectionViewDataSource()
-        videoDelegate = VideoCollectionViewDelegate(parentViewController: self, dataSource: videoDataSource)
-        
         videoCollectionView.delegate = videoDelegate
         videoCollectionView.dataSource = videoDataSource
         videoCollectionView.dragDelegate = videoDelegate
@@ -208,14 +158,17 @@ private extension ViewController {
     }
 
     @objc private func removeAllTapped(_ sender: UIButton) {
+        videoDataSource.videoAssets.forEach {
+            VideoAssetManager.deleteFile(at: $0.assetURL)
+        }
         videoDataSource.videoAssets.removeAll()
         videoCollectionView.reloadData()
         thumbnailImageView.setImage(image: nil)
     }
-    
+
     @objc private func addVideosTapped(_ sender: UIButton) {
         var config =  PHPickerConfiguration(photoLibrary: PHPhotoLibrary.shared())
-        config.selectionLimit = 0 // 제한 없음
+        config.selectionLimit = 0
         config.filter = .any(of: [.videos])
         config.preferredAssetRepresentationMode = .current
         

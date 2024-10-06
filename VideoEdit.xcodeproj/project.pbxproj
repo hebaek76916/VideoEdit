@@ -10,7 +10,6 @@
 		138EBAC82CAAE4AB00D1821F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138EBAC72CAAE4AB00D1821F /* AppDelegate.swift */; };
 		138EBACA2CAAE4AB00D1821F /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138EBAC92CAAE4AB00D1821F /* SceneDelegate.swift */; };
 		138EBACC2CAAE4AB00D1821F /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138EBACB2CAAE4AB00D1821F /* ViewController.swift */; };
-		138EBACF2CAAE4AB00D1821F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 138EBACD2CAAE4AB00D1821F /* Main.storyboard */; };
 		138EBAD12CAAE4AC00D1821F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 138EBAD02CAAE4AC00D1821F /* Assets.xcassets */; };
 		138EBAD42CAAE4AC00D1821F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 138EBAD22CAAE4AC00D1821F /* LaunchScreen.storyboard */; };
 		138EBADF2CAAE4AC00D1821F /* VideoEditTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138EBADE2CAAE4AC00D1821F /* VideoEditTests.swift */; };
@@ -23,6 +22,7 @@
 		138EBB072CAF7F9A00D1821F /* VideoCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138EBB062CAF7F9A00D1821F /* VideoCollectionView.swift */; };
 		138EBB092CAF851D00D1821F /* VideoCollectionViewDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138EBB082CAF851D00D1821F /* VideoCollectionViewDelegate.swift */; };
 		138EBB0D2CAF858000D1821F /* VideoCollectionDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138EBB0C2CAF858000D1821F /* VideoCollectionDataSource.swift */; };
+		13A0B5922CB1A196006DB015 /* VideoAssetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13A0B5912CB1A196006DB015 /* VideoAssetManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -47,7 +47,6 @@
 		138EBAC72CAAE4AB00D1821F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		138EBAC92CAAE4AB00D1821F /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		138EBACB2CAAE4AB00D1821F /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
-		138EBACE2CAAE4AB00D1821F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		138EBAD02CAAE4AC00D1821F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		138EBAD32CAAE4AC00D1821F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		138EBAD52CAAE4AC00D1821F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -63,6 +62,7 @@
 		138EBB062CAF7F9A00D1821F /* VideoCollectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoCollectionView.swift; sourceTree = "<group>"; };
 		138EBB082CAF851D00D1821F /* VideoCollectionViewDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoCollectionViewDelegate.swift; sourceTree = "<group>"; };
 		138EBB0C2CAF858000D1821F /* VideoCollectionDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoCollectionDataSource.swift; sourceTree = "<group>"; };
+		13A0B5912CB1A196006DB015 /* VideoAssetManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoAssetManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -113,14 +113,12 @@
 		138EBAC62CAAE4AB00D1821F /* VideoEdit */ = {
 			isa = PBXGroup;
 			children = (
-				138EBB042CAF7D2600D1821F /* Extensions */,
 				138EBAC72CAAE4AB00D1821F /* AppDelegate.swift */,
 				138EBAC92CAAE4AB00D1821F /* SceneDelegate.swift */,
 				138EBACB2CAAE4AB00D1821F /* ViewController.swift */,
-				138EBB002CAEB81500D1821F /* ThumbnailView.swift */,
-				138EBB052CAF7F7100D1821F /* VideoCollection */,
-				138EBAF72CAB82B600D1821F /* ViewControllers */,
-				138EBACD2CAAE4AB00D1821F /* Main.storyboard */,
+				13A0B5932CB280B3006DB015 /* CustomViews */,
+				138EBB042CAF7D2600D1821F /* Extensions */,
+				13A0B5942CB280DD006DB015 /* Managers */,
 				138EBAD02CAAE4AC00D1821F /* Assets.xcassets */,
 				138EBAD22CAAE4AC00D1821F /* LaunchScreen.storyboard */,
 				138EBAD52CAAE4AC00D1821F /* Info.plist */,
@@ -145,13 +143,6 @@
 			path = VideoEditUITests;
 			sourceTree = "<group>";
 		};
-		138EBAF72CAB82B600D1821F /* ViewControllers */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = ViewControllers;
-			sourceTree = "<group>";
-		};
 		138EBB042CAF7D2600D1821F /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
@@ -170,6 +161,23 @@
 				138EBB0C2CAF858000D1821F /* VideoCollectionDataSource.swift */,
 			);
 			path = VideoCollection;
+			sourceTree = "<group>";
+		};
+		13A0B5932CB280B3006DB015 /* CustomViews */ = {
+			isa = PBXGroup;
+			children = (
+				138EBB002CAEB81500D1821F /* ThumbnailView.swift */,
+				138EBB052CAF7F7100D1821F /* VideoCollection */,
+			);
+			path = CustomViews;
+			sourceTree = "<group>";
+		};
+		13A0B5942CB280DD006DB015 /* Managers */ = {
+			isa = PBXGroup;
+			children = (
+				13A0B5912CB1A196006DB015 /* VideoAssetManager.swift */,
+			);
+			path = Managers;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -278,7 +286,6 @@
 			files = (
 				138EBAD42CAAE4AC00D1821F /* LaunchScreen.storyboard in Resources */,
 				138EBAD12CAAE4AC00D1821F /* Assets.xcassets in Resources */,
-				138EBACF2CAAE4AB00D1821F /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -309,6 +316,7 @@
 				138EBB072CAF7F9A00D1821F /* VideoCollectionView.swift in Sources */,
 				138EBAFD2CAD2C2000D1821F /* Extensions+Array.swift in Sources */,
 				138EBAFB2CAC042700D1821F /* VideoCell.swift in Sources */,
+				13A0B5922CB1A196006DB015 /* VideoAssetManager.swift in Sources */,
 				138EBB092CAF851D00D1821F /* VideoCollectionViewDelegate.swift in Sources */,
 				138EBB012CAEB81500D1821F /* ThumbnailView.swift in Sources */,
 				138EBAC82CAAE4AB00D1821F /* AppDelegate.swift in Sources */,
@@ -349,14 +357,6 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
-		138EBACD2CAAE4AB00D1821F /* Main.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				138EBACE2CAAE4AB00D1821F /* Base */,
-			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
 		138EBAD22CAAE4AC00D1821F /* LaunchScreen.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -499,7 +499,6 @@
 				INFOPLIST_FILE = VideoEdit/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -528,7 +527,6 @@
 				INFOPLIST_FILE = VideoEdit/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
