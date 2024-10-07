@@ -147,7 +147,7 @@ class VideoAssetManager {
         imageGenerator.requestedTimeToleranceAfter = CMTime(seconds: 0.1, preferredTimescale: 600)
         
         let interval = CMTime(seconds: 1, preferredTimescale: 600)
-        var currentTime = CMTime(seconds: 0, preferredTimescale: 600) // 시작 시간
+        var currentTime = CMTime(seconds: 0, preferredTimescale: 600)
         
         while currentTime <= asset.duration {
             do {

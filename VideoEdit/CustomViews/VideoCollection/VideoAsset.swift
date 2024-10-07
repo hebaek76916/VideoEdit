@@ -11,6 +11,7 @@ class VideoAsset {
     let assetURL: URL
     var duration: CMTime
     var thumbnails: [CGImage] = []
+    var isSaved: Bool = false
     var firstThumbnail: CGImage? {
         thumbnails.first
     }

@@ -8,7 +8,7 @@
 import UIKit
 import PhotosUI
 
-class ViewController: UIViewController {
+class VideoThumbnailViewController: UIViewController {
     
     internal var thumbnailImageView: ThumbnailView = {
         let imageView = ThumbnailView()
@@ -53,7 +53,6 @@ class ViewController: UIViewController {
         button.layer.borderWidth = 2.0
         button.layer.borderColor = UIColor.white.cgColor
         button.layer.cornerRadius = 16
-        button.isHidden = true // Core Data 문제가 있어서.. 구현 미완입니다. https://www.google.com/search?q=CoreData+Showing+All+Errors+Only+Target+%27VideoEdit%27+%28project+%27VideoEdit%27%29+has+Swift+tasks+not+blocking+downstream+targets&newwindow=1&sca_esv=8aea90bc2dc45c94&rlz=1C5CHFA_enKR1072KR1075&sxsrf=ADLYWIL_GQ85yQDcEMMbmTj6MZ61Z31igA%3A1728267228694&ei=3EMDZ9qKKtfd2roPqsfdqQY&ved=0ahUKEwja6PiRmfuIAxXXrlYBHapjN2UQ4dUDCA8&uact=5&oq=CoreData+Showing+All+Errors+Only+Target+%27VideoEdit%27+%28project+%27VideoEdit%27%29+has+Swift+tasks+not+blocking+downstream+targets&gs_lp=Egxnd3Mtd2l6LXNlcnAieUNvcmVEYXRhIFNob3dpbmcgQWxsIEVycm9ycyBPbmx5IFRhcmdldCAnVmlkZW9FZGl0JyAocHJvamVjdCAnVmlkZW9FZGl0JykgaGFzIFN3aWZ0IHRhc2tzIG5vdCBibG9ja2luZyBkb3duc3RyZWFtIHRhcmdldHNIAFAAWABwAHgBkAEAmAEAoAEAqgEAuAEDyAEA-AEBmAIAoAIAmAMAkgcAoAcA&sclient=gws-wiz-serp
         button.translatesAutoresizingMaskIntoConstraints = false
         button.widthAnchor.constraint(equalToConstant: 60).isActive = true
         button.heightAnchor.constraint(equalToConstant: 60).isActive = true
@@ -86,11 +85,28 @@ class ViewController: UIViewController {
         addVideoButton.addTarget(self, action: #selector(addVideosTapped), for: .touchUpInside)
         removeAllButton.addTarget(self, action: #selector(removeAllTapped), for: .touchUpInside)
         saveOpenButton.addTarget(self, action: #selector(saveOpenTapped), for: .touchUpInside)
+        NotificationCenter.default.addObserver(self, selector: #selector(clearData), name: UIApplication.willTerminateNotification, object: nil)
+        Task {
+            await self.checkSavedVideos()
+        }
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         checkPhotoLibraryAuthorization()
+    }
+    
+    @objc func clearData() {
+        videoDataSource.videoAssets.forEach { asset in
+            // Core Data에 저장되지 않은 비디오만 삭제합니다.
+            if !asset.isSaved {
+                // 파일 삭제 메서드 호출
+                VideoAssetManager.deleteFile(at: asset.assetURL)
+                print("Deleted video file at: \(asset.assetURL)")
+            } else {
+                print("Video file is saved, not deleting: \(asset.assetURL)")
+            }
+        }
     }
     
     private func checkPhotoLibraryAuthorization() {
@@ -107,9 +123,10 @@ class ViewController: UIViewController {
             // 접근 권한 거부됨, 설정에서 권한을 요청하라는 메시지
         }
     }
+    
 }
 
-extension ViewController: PHPickerViewControllerDelegate {
+extension VideoThumbnailViewController: PHPickerViewControllerDelegate {
 
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
         picker.dismiss(animated: true, completion: nil)
@@ -121,11 +138,10 @@ extension ViewController: PHPickerViewControllerDelegate {
         
         Task {
             let size = self.thumbnailImageView.frame.size
-            VideoAssetManager.shared.thumbnailSize = .init(width: size.width * 0.8, height: size.height * 0.8)
+            VideoAssetManager.shared.thumbnailSize = .init(width: size.width, height: size.height)
             let videoAssets = await VideoAssetManager.shared.fetchAndExportVideos(results: results)
             videoDataSource.videoAssets.append(contentsOf: videoAssets)
             DispatchQueue.main.async {
-                // 모든 비디오 처리 후 UI 갱신
                 self.loadingIndicator.stopAnimating()
                 self.availiblityButtonsWhileProcessing(isEnable: true)
                 self.videoCollectionView.reloadData()
@@ -139,7 +155,7 @@ extension ViewController: PHPickerViewControllerDelegate {
     }
 }
 
-extension ViewController: VideoCollectionDelegate {
+extension VideoThumbnailViewController: VideoCollectionDelegate {
     
     // 스크롤된 시점에 맞춰 해당 썸네일을 표시
     func updateThumbnailAtScrollPosition(scrollOffset: CGFloat) {
@@ -161,7 +177,7 @@ extension ViewController: VideoCollectionDelegate {
     }
 }
 
-extension ViewController {
+extension VideoThumbnailViewController {
     
     private func checkSavedVideos() async {
         let isExist = await isSavedVideosExist()
@@ -169,15 +185,11 @@ extension ViewController {
     }
     
     private func isSavedVideosExist() async -> Bool {
-//        let videoAssets = await VideoAssetManager.shared.fetchVideoAssets()
-//        return !videoAssets.isEmpty
-        return false
+        let videoAssets = await VideoAssetManager.shared.fetchVideoAssets()
+        return !videoAssets.isEmpty
     }
     
     private func removeAll() {
-        videoDataSource.videoAssets.forEach {
-            VideoAssetManager.deleteFile(at: $0.assetURL)
-        }
         videoDataSource.videoAssets.removeAll()
         videoCollectionView.reloadData()
         thumbnailImageView.setImage(image: nil)
@@ -185,7 +197,7 @@ extension ViewController {
 }
 
 //MARK: Set Up
-private extension ViewController {
+private extension VideoThumbnailViewController {
     
     func configureVideoCollectionView() {
         videoCollectionView.delegate = videoDelegate
@@ -209,14 +221,19 @@ private extension ViewController {
         present(picker, animated: true, completion: nil)
     }
     
-    @objc private func saveOpenTapped(_ sender: UIButton) async {
-//        let results = await VideoAssetManager.shared.fetchVideoAssets()
-//        if !results.isEmpty {
-//            removeAll()
-//            videoDataSource.videoAssets = results
-//        } else if !videoDataSource.videoAssets.isEmpty {
-//            VideoAssetManager.shared.saveVideoAssets(videoAssets: videoDataSource.videoAssets)
-//        }
+    @objc private func saveOpenTapped(_ sender: UIButton) {
+        Task {
+            let results = await VideoAssetManager.shared.fetchVideoAssets()
+            if !results.isEmpty {
+                removeAll()
+                videoDataSource.videoAssets = results
+                VideoAssetManager.shared.deleteAllVideoAssets()
+                setSaveOpenButtonImage(isExist: false)
+            } else if !videoDataSource.videoAssets.isEmpty {
+                VideoAssetManager.shared.saveVideoAssets(videoAssets: videoDataSource.videoAssets)
+                setSaveOpenButtonImage(isExist: true)
+            }
+        }
     }
     
     func setUpUI() {
