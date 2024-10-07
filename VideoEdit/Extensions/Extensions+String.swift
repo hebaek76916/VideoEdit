@@ -11,10 +11,7 @@ import AVFoundation
 extension String {
     
     static func timeProgressString(currentTime: Double, totalTime: Double) -> String {
-        // 현재 초로 변환 (현재 시간이 총 시간보다 클 수 없도록 제한)
         let currentSeconds = Double.minimum(currentTime, totalTime)
-
-        // 포맷된 문자열 반환
         return "\(formatTime(currentSeconds)) / \(formatTime(totalTime))"
     }
     

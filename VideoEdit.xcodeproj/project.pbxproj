@@ -24,6 +24,7 @@
 		138EBB0D2CAF858000D1821F /* VideoCollectionDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138EBB0C2CAF858000D1821F /* VideoCollectionDataSource.swift */; };
 		13A0B5922CB1A196006DB015 /* VideoAssetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13A0B5912CB1A196006DB015 /* VideoAssetManager.swift */; };
 		13A0B5962CB2D0BC006DB015 /* VideoAsset.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13A0B5952CB2D0BC006DB015 /* VideoAsset.swift */; };
+		13A0B59F2CB2DF34006DB015 /* VideoAssetManager+CoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13A0B59E2CB2DF34006DB015 /* VideoAssetManager+CoreData.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -65,6 +66,7 @@
 		138EBB0C2CAF858000D1821F /* VideoCollectionDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoCollectionDataSource.swift; sourceTree = "<group>"; };
 		13A0B5912CB1A196006DB015 /* VideoAssetManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoAssetManager.swift; sourceTree = "<group>"; };
 		13A0B5952CB2D0BC006DB015 /* VideoAsset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoAsset.swift; sourceTree = "<group>"; };
+		13A0B59E2CB2DF34006DB015 /* VideoAssetManager+CoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "VideoAssetManager+CoreData.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -179,6 +181,7 @@
 			isa = PBXGroup;
 			children = (
 				13A0B5912CB1A196006DB015 /* VideoAssetManager.swift */,
+				13A0B59E2CB2DF34006DB015 /* VideoAssetManager+CoreData.swift */,
 			);
 			path = Managers;
 			sourceTree = "<group>";
@@ -317,6 +320,7 @@
 				138EBACC2CAAE4AB00D1821F /* ViewController.swift in Sources */,
 				138EBB032CAEBDDF00D1821F /* Extensions+String.swift in Sources */,
 				138EBB072CAF7F9A00D1821F /* VideoCollectionView.swift in Sources */,
+				13A0B59F2CB2DF34006DB015 /* VideoAssetManager+CoreData.swift in Sources */,
 				138EBAFD2CAD2C2000D1821F /* Extensions+Array.swift in Sources */,
 				138EBAFB2CAC042700D1821F /* VideoCell.swift in Sources */,
 				13A0B5962CB2D0BC006DB015 /* VideoAsset.swift in Sources */,

@@ -45,6 +45,21 @@ class ViewController: UIViewController {
         return button
     }()
     
+    private let saveOpenButton: UIButton = {
+        let button = UIButton()
+        button.setImage(UIImage(systemName: "square.and.arrow.down")?.withTintColor(.white), for: .normal)
+        button.titleLabel?.textColor = .white
+        button.backgroundColor = .white
+        button.layer.borderWidth = 2.0
+        button.layer.borderColor = UIColor.white.cgColor
+        button.layer.cornerRadius = 16
+        button.isHidden = true // Core Data 문제가 있어서.. 구현 미완입니다. https://www.google.com/search?q=CoreData+Showing+All+Errors+Only+Target+%27VideoEdit%27+%28project+%27VideoEdit%27%29+has+Swift+tasks+not+blocking+downstream+targets&newwindow=1&sca_esv=8aea90bc2dc45c94&rlz=1C5CHFA_enKR1072KR1075&sxsrf=ADLYWIL_GQ85yQDcEMMbmTj6MZ61Z31igA%3A1728267228694&ei=3EMDZ9qKKtfd2roPqsfdqQY&ved=0ahUKEwja6PiRmfuIAxXXrlYBHapjN2UQ4dUDCA8&uact=5&oq=CoreData+Showing+All+Errors+Only+Target+%27VideoEdit%27+%28project+%27VideoEdit%27%29+has+Swift+tasks+not+blocking+downstream+targets&gs_lp=Egxnd3Mtd2l6LXNlcnAieUNvcmVEYXRhIFNob3dpbmcgQWxsIEVycm9ycyBPbmx5IFRhcmdldCAnVmlkZW9FZGl0JyAocHJvamVjdCAnVmlkZW9FZGl0JykgaGFzIFN3aWZ0IHRhc2tzIG5vdCBibG9ja2luZyBkb3duc3RyZWFtIHRhcmdldHNIAFAAWABwAHgBkAEAmAEAoAEAqgEAuAEDyAEA-AEBmAIAoAIAmAMAkgcAoAcA&sclient=gws-wiz-serp
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.widthAnchor.constraint(equalToConstant: 60).isActive = true
+        button.heightAnchor.constraint(equalToConstant: 60).isActive = true
+        return button
+    }()
+    
     private var videoDataSource = VideoCollectionViewDataSource()
     lazy var videoDelegate = VideoCollectionViewDelegate(parentViewController: self, dataSource: self.videoDataSource)
     private var videoCollectionView: VideoCollectionView = {
@@ -70,6 +85,7 @@ class ViewController: UIViewController {
         setUpUI()
         addVideoButton.addTarget(self, action: #selector(addVideosTapped), for: .touchUpInside)
         removeAllButton.addTarget(self, action: #selector(removeAllTapped), for: .touchUpInside)
+        saveOpenButton.addTarget(self, action: #selector(saveOpenTapped), for: .touchUpInside)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -143,7 +159,29 @@ extension ViewController: VideoCollectionDelegate {
             self.thumbnailImageView.setProgress(progress: currentTime, total: CMTimeGetSeconds(totalDuration))
         }
     }
+}
 
+extension ViewController {
+    
+    private func checkSavedVideos() async {
+        let isExist = await isSavedVideosExist()
+        setSaveOpenButtonImage(isExist: isExist)
+    }
+    
+    private func isSavedVideosExist() async -> Bool {
+//        let videoAssets = await VideoAssetManager.shared.fetchVideoAssets()
+//        return !videoAssets.isEmpty
+        return false
+    }
+    
+    private func removeAll() {
+        videoDataSource.videoAssets.forEach {
+            VideoAssetManager.deleteFile(at: $0.assetURL)
+        }
+        videoDataSource.videoAssets.removeAll()
+        videoCollectionView.reloadData()
+        thumbnailImageView.setImage(image: nil)
+    }
 }
 
 //MARK: Set Up
@@ -157,12 +195,7 @@ private extension ViewController {
     }
 
     @objc private func removeAllTapped(_ sender: UIButton) {
-        videoDataSource.videoAssets.forEach {
-            VideoAssetManager.deleteFile(at: $0.assetURL)
-        }
-        videoDataSource.videoAssets.removeAll()
-        videoCollectionView.reloadData()
-        thumbnailImageView.setImage(image: nil)
+        removeAll()
     }
 
     @objc private func addVideosTapped(_ sender: UIButton) {
@@ -176,6 +209,16 @@ private extension ViewController {
         present(picker, animated: true, completion: nil)
     }
     
+    @objc private func saveOpenTapped(_ sender: UIButton) async {
+//        let results = await VideoAssetManager.shared.fetchVideoAssets()
+//        if !results.isEmpty {
+//            removeAll()
+//            videoDataSource.videoAssets = results
+//        } else if !videoDataSource.videoAssets.isEmpty {
+//            VideoAssetManager.shared.saveVideoAssets(videoAssets: videoDataSource.videoAssets)
+//        }
+    }
+    
     func setUpUI() {
         view.backgroundColor = .black
         setUpAddVideoButton()
@@ -184,6 +227,7 @@ private extension ViewController {
         setUpThumbnailImageView()
         setUpLoadingIndicator()
         setUpRemoveAllButton()
+        setUpSaveOpenButton()
         
         func setUpAddVideoButton() {
             view.addSubview(addVideoButton)
@@ -222,10 +266,23 @@ private extension ViewController {
             ].forEach { $0.isActive = true }
         }
         
+        func setUpSaveOpenButton() {
+            view.addSubview(saveOpenButton)
+            [
+                saveOpenButton.centerYAnchor.constraint(equalTo: addVideoButton.centerYAnchor),
+                saveOpenButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20)
+            ].forEach { $0.isActive = true }
+        }
+        
         func setUpLoadingIndicator() {
             loadingIndicator.center = view.center
             view.addSubview(loadingIndicator)
         }
+    }
+    
+    func setSaveOpenButtonImage(isExist: Bool) {
+        let buttonImage = isExist ? "square.and.arrow.up" : "square.and.arrow.down"
+        saveOpenButton.setImage(UIImage(systemName: buttonImage), for: .normal)
     }
     
 }

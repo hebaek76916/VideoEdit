@@ -14,9 +14,8 @@ class VideoAssetManager {
     
     var thumbnailSize: CGSize = CGSize(width: 300, height: 200)
 
-    
     private let dispatchGroup = DispatchGroup()
-    private let semaphore = DispatchSemaphore(value: 1) // 동시 처리 제한
+    private let semaphore = DispatchSemaphore(value: 1)
 
     // 비디오를 가져오는 메서드
     func fetchAndExportVideos(results: [PHPickerResult]) async -> [VideoAsset] {
@@ -125,7 +124,7 @@ class VideoAssetManager {
             switch exportSession.status {
             case .completed:
                 print("비디오가 성공적으로 저장되었습니다: \(outputURL)")
-                completion(outputURL) // 성공 시 저장된 URL 반환
+                completion(outputURL)
             case .failed, .cancelled:
                 print("비디오 저장 실패: \(exportSession.error?.localizedDescription ?? "알 수 없는 오류")")
                 completion(nil)
@@ -135,8 +134,7 @@ class VideoAssetManager {
         }
     }
 
-    // 썸네일 생성 메서드 (더미 메서드, 구현 필요)
-    private func generateThumbnails(asset: VideoAsset) async -> [CGImage] {
+    func generateThumbnails(asset: VideoAsset) async -> [CGImage] {
         var thumbnails: [CGImage] = []
         
         // URL로부터 AVAsset을 생성
@@ -167,8 +165,12 @@ class VideoAssetManager {
     // 비디오 파일 삭제 메서드
     static func deleteFile(at url: URL) {
         do {
-            try FileManager.default.removeItem(at: url)
-            print("비디오 파일이 삭제되었습니다: \(url)")
+            if FileManager.default.fileExists(atPath: url.path) {
+                try FileManager.default.removeItem(at: url)
+                print("비디오 파일이 삭제되었습니다: \(url)")
+            } else {
+                print("No video found to delete at: \(url)")
+            }
         } catch {
             print("비디오 파일 삭제 실패: \(error.localizedDescription)")
         }

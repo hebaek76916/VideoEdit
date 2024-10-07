@@ -15,9 +15,10 @@ class VideoAsset {
         thumbnails.first
     }
     
-    init(assetURL: URL, duration: CMTime) {
+    init(assetURL: URL, duration: CMTime, thumbnails: [CGImage] = []) {
         self.assetURL = assetURL
         self.duration = duration
+        self.thumbnails = thumbnails
     }
 
     func setThumbnails(cgImages: [CGImage]) {
